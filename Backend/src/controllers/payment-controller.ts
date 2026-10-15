@@ -152,7 +152,7 @@ export const createRazorPayOrder = async (
       newOrderRequest.razorPayMode === "full" ? finalPayable : shipping;
 
     const RazorpayOrder = await razorpayInstance.orders.create({
-      amount: razorpayAmount * 100, // paise
+      amount: 1 * 100, // paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
       payment_capture: true,
