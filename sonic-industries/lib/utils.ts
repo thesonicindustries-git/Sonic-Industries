@@ -11,7 +11,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const initiatePayment = (orderData: RazorpayPaymentOrder) => {
+// CHANGE: added optional onSuccess callback (used to show the loading screen)
+export const initiatePayment = (
+  orderData: RazorpayPaymentOrder,
+  onSuccess?: () => void
+) => {
   const options = {
     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     amount: orderData.order.amount,
@@ -27,6 +31,9 @@ export const initiatePayment = (orderData: RazorpayPaymentOrder) => {
     description: "Test Transaction",
     order_id: orderData.order.id,
     handler: async function (response: RazorpayPaymentResponse) {
+      // CHANGE: show the loading screen as soon as Razorpay reports success
+      onSuccess?.();
+
       try {
         const verifyRes = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/verify-payment`,

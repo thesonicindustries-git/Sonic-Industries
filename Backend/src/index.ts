@@ -18,6 +18,7 @@ import DashboardRoutes from "./routes/dashboard-routes";
 
 dotenv.config();
 const app = express();
+app.set("trust proxy", 1);
 const port: number = parseInt(process.env.PORT || "5000");
 
 // Middleware

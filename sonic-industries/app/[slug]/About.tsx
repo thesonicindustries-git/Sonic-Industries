@@ -192,7 +192,7 @@ export default function About() {
           ...cardVariants,
         }}
         transition={{ delay: index * 0.1 }}
-        className="relative overflow-hidden rounded-2xl shadow-lg bg-white h-auto sm:h-96 flex"
+        className="relative w-full overflow-hidden rounded-2xl bg-white shadow-lg h-auto sm:w-[calc(50%-1rem)] sm:h-96 md:w-[calc(33.333%-1.333rem)] lg:w-[calc(25%-1.5rem)] flex"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -209,7 +209,7 @@ export default function About() {
           >
             <div
               className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl ${
-                isHovered ? "text-white" : "text-indigo-600"
+                isHovered ? "text-white" : "text-red-600"
               }`}
             >
               {feature.icon}
@@ -228,7 +228,7 @@ export default function About() {
         </div>
         {/* Background glow */}
         <motion.div
-          className="absolute inset-0 bg-linear-to-tr from-purple-700 to-indigo-500 rounded-2xl z-0"
+          className="absolute inset-0 bg-linear-to-tr from-orange-700 to-red-500 rounded-2xl z-0"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: isHovered ? 1 : 0, opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.4 }}
@@ -256,7 +256,7 @@ export default function About() {
             makes us the preferred choice for businesses worldwide.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 cursor-pointer">
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 cursor-pointer">
           {features.map((feature, index) => (
             <FeatureCard key={index} feature={feature} index={index} />
           ))}

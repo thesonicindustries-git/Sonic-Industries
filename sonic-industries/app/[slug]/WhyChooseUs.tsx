@@ -188,7 +188,7 @@ export default function WhyChooseUs({
         <div className="lg:col-span-5 grid grid-cols-6 grid-rows-6 gap-4 h-full">
           {/* 1 Year Guarantee - Top Right */}
           <div
-            className="col-span-6 row-span-3 bg-blue-600 rounded-3xl p-6 flex flex-col items-center justify-center shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl cursor-pointer"
+            className="col-span-6 row-span-3 bg-gray-600 rounded-3xl p-6 flex flex-col items-center justify-center shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl cursor-pointer"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -220,11 +220,11 @@ export default function WhyChooseUs({
           >
             <div className="relative w-14 h-14 mb-3">
               <div
-                className="absolute inset-0 border-2 border-dashed border-blue-400 rounded-full animate-spin"
+                className="absolute inset-0 border-2 border-dashed border-gray-400 rounded-full animate-spin"
                 style={{ animationDuration: "12s" }}
               ></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Truck size={22} className="text-blue-500" />
+                <Truck size={22} className="text-black-500" />
               </div>
             </div>
             <h3 className="text-lg md:text-xl font-bold text-center">
@@ -243,11 +243,11 @@ export default function WhyChooseUs({
           >
             <div className="relative w-14 h-14 mb-3">
               <div
-                className="absolute inset-0 border-2 border-dashed border-blue-400 rounded-full animate-spin"
+                className="absolute inset-0 border-2 border-dashed border-gray-400 rounded-full animate-spin"
                 style={{ animationDuration: "8s" }}
               ></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <RefreshCw size={22} className="text-blue-500" />
+                <RefreshCw size={22} className="text-black-500" />
               </div>
             </div>
             <h3 className="text-lg md:text-xl font-bold text-center">
@@ -257,7 +257,7 @@ export default function WhyChooseUs({
 
           {/* Dedicated Support - Bottom */}
           <div
-            className="col-span-6 row-span-3 bg-pink-500 rounded-3xl p-6 flex flex-col items-center justify-center text-white shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl cursor-pointer"
+            className="col-span-6 row-span-3 bg-pink-400 rounded-3xl p-6 flex flex-col items-center justify-center text-white shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-xl cursor-pointer"
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "translateY(0)" : "translateY(20px)",

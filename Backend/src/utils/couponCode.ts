@@ -3,15 +3,31 @@ import { OrderModel } from "../models/orders.model";
 import { Product, ProductModel } from "../models/products.model";
 
 export const isDealApplicable = async (
-  couponCode: string,
+  couponCode: string | null,
   productId: string,
   email: string,
 ) => {
   try {
+    // CHANGE: if no coupon is sent, do nothing (otherwise findOne({couponCode: null})
+    // could match a random deal that has no code)
+    if (!couponCode || !couponCode.trim()) {
+      return {
+        valid: false,
+        message: "No coupon provided",
+        discount: 0,
+        dealId: null,
+      };
+    }
+
     // 1️⃣ Find the deal by coupon code
-    const deal = await DealModel.findOne({ couponCode });
+    const deal = await DealModel.findOne({ couponCode: couponCode.trim() });
     if (!deal) {
-      return { valid: false, message: "Invalid coupon code", discount: 0 };
+      return {
+        valid: false,
+        message: "Invalid coupon code",
+        discount: 0,
+        dealId: null,
+      };
     }
 
     // For product-specific deals, ensure product matches
@@ -22,16 +38,23 @@ export const isDealApplicable = async (
           valid: false,
           message: `This coupon is only valid for ${deal.productName}.`,
           discount: 0,
+          dealId: null,
         };
       }
     }
 
     // 2️⃣ Check expiration
     if (new Date(deal.expiresAt) < new Date()) {
-      return { valid: false, message: "This deal has expired", discount: 0 };
+      return {
+        valid: false,
+        message: "This deal has expired",
+        discount: 0,
+        dealId: null,
+      };
     }
 
     // 3️⃣ Handle general vs product deals
+    // CHANGE: failed / cancelled orders do not use up the coupon
     let prevOrder;
 
     if (deal.dealType === "general") {
@@ -39,6 +62,11 @@ export const isDealApplicable = async (
       prevOrder = await OrderModel.findOne({
         "customer.email": email,
         couponCode: deal._id,
+        status: { $ne: "cancelled" },
+        $or: [
+          { payment_status: { $in: ["paid", "partial"] } },
+          { payment_method: "cod" },
+        ],
       });
     } else if (deal.dealType === "product") {
       // Only for the specific product
@@ -46,6 +74,11 @@ export const isDealApplicable = async (
         "customer.email": email,
         couponCode: deal._id,
         "order_items.productId": productId,
+        status: { $ne: "cancelled" },
+        $or: [
+          { payment_status: { $in: ["paid", "partial"] } },
+          { payment_method: "cod" },
+        ],
       });
     }
 
@@ -58,10 +91,10 @@ export const isDealApplicable = async (
             ? "You have already availed this general offer."
             : "You have already availed this offer for this product.",
         discount: 0,
+        dealId: null,
       };
     }
 
-    // 5️⃣ All good → apply discount
     // 5️⃣ All good → apply discount
     let discount = 0;
 
@@ -82,6 +115,8 @@ export const isDealApplicable = async (
       valid: true,
       message: "Coupon code applied successfully.",
       discount,
+      // CHANGE: return deal id so the order can store it
+      dealId: deal._id,
     };
   } catch (err) {
     console.error("Error validating deal:", err);
@@ -89,6 +124,7 @@ export const isDealApplicable = async (
       valid: false,
       message: "An error occurred while validating the coupon.",
       discount: 0,
+      dealId: null,
     };
   }
 };

@@ -36,7 +36,20 @@ export const createLead = async (
     }
 
     const mailType: string = "inquiry";
-    const receiverEmail: string[] = process.env.ADMIN_EMAILS?.split(",") as string[];
+    const receiverEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+    if (receiverEmails.length === 0) {
+      res.status(500).json({
+        success: false,
+        message: "ADMIN_EMAILS is not configured on the backend.",
+      });
+      return;
+    }
+
+    const receiverEmail = receiverEmails[0];
     const receiverName: string = "Sonic Industries";
 
     const newLead: Lead = await LeadModel.create({
@@ -50,7 +63,7 @@ export const createLead = async (
     });
 
     await sendMail({
-      to: receiverEmail,
+      to: receiverEmails,
       subject: `New Inquiry from ${name}`,
       html: getInquiryEmailTemplate(name, email, message),
     });

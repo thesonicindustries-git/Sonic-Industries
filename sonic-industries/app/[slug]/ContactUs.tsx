@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
+
+// CHANGE: spam protection settings
+const COOLDOWN_SECONDS = 60;
+const COOLDOWN_KEY = "contact_last_sent";
+const MIN_FILL_TIME_MS = 3000; // a human needs at least 3 seconds to fill the form
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -11,13 +16,18 @@ export default function ContactUs() {
     email: "",
     message: "",
   });
+  // CHANGE: hidden field that only bots fill
+  const [honeypot, setHoneypot] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const sectionRef = useRef<HTMLDivElement | null>(null);
+  // CHANGE: remember when the user started typing
+  const startedAtRef = useRef<number | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    if (startedAtRef.current === null) startedAtRef.current = Date.now();
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -30,21 +40,61 @@ export default function ContactUs() {
       return;
     }
 
+    // CHANGE: block bots that submit instantly
+    if (
+      startedAtRef.current === null ||
+      Date.now() - startedAtRef.current < MIN_FILL_TIME_MS
+    ) {
+      toast.error("Please take a moment to fill in the form.");
+      return;
+    }
+
+    // CHANGE: cooldown between messages (60 seconds)
+    try {
+      const last = Number(localStorage.getItem(COOLDOWN_KEY) || 0);
+      const secondsLeft = Math.ceil(
+        (last + COOLDOWN_SECONDS * 1000 - Date.now()) / 1000
+      );
+      if (secondsLeft > 0) {
+        toast.error(`Please wait ${secondsLeft}s before sending another message.`);
+        return;
+      }
+    } catch {
+      // localStorage not available, backend limit still protects us
+    }
+
     try {
       setIsSubmitting(true);
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/leads`,
-        formData
+        // CHANGE: send the honeypot value too, backend rejects bots
+        { ...formData, website: honeypot }
       );
 
       if (res.data.success) {
         toast.success("Message sent successfully!");
         setFormData({ name: "", email: "", message: "" });
+        startedAtRef.current = null;
+        try {
+          localStorage.setItem(COOLDOWN_KEY, String(Date.now()));
+        } catch {}
       } else {
         toast.error("Failed to send message.");
       }
-    } catch (error) {
-      toast.error("Something went wrong while sending the message. Please try again.");
+    } catch (err) {
+      // CHANGE: show the backend's message (for example, rate limit reached)
+      const error = err as AxiosError<{ message?: string }>;
+      if (error.response?.status === 429) {
+        toast.error(
+          error.response.data?.message ||
+            "Too many messages. Please try again later."
+        );
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            "Something went wrong while sending the message. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -63,21 +113,19 @@ export default function ContactUs() {
   const contactCards = [
     {
       id: 1,
-      icon: <Phone className="w-6 h-6 text-purple-600" />,
+      icon: <Phone className="w-6 h-6 text-red-600" />,
       content: ["+91 8010735898", "+91 9321970200"],
     },
     {
       id: 2,
-      icon: <Mail className="w-6 h-6 text-purple-600" />,
+      icon: <Mail className="w-6 h-6 text-red-600" />,
       content: ["sonicindustriesofficial@gmail.com"],
     },
     {
       id: 3,
-      icon: <MapPin className="w-6 h-6 text-purple-600" />,
+      icon: <MapPin className="w-6 h-6 text-red-600" />,
       content: [
-        "Sonic Industries, Office No. 5,6,7,8,9, Sai Shristi Apt,",
-        "Opp Railway Station, Nearby Bus Stop",
-        "Nallasopara West, MH-401203",
+        "Ground Floor, Office No. A-1, Sai Srushti Apartment, near Bharat Gas, Lakshmiben Chedda Nagar, Nalasopara West, Maharashtra 401203",
       ],
     },
   ];
@@ -100,11 +148,11 @@ export default function ContactUs() {
         </div>
 
         {/* Contact Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {contactCards.map((card, index) => (
             <div
               key={card.id}
-              className={`bg-white rounded-xl shadow-md p-6 sm:p-8 text-center transition-all duration-700
+              className={`bg-white rounded-xl shadow-md p-6 sm:p-8 text-center transition-all duration-700 ${index === contactCards.length - 1 ? "md:col-span-2 md:w-1/2 md:justify-self-center lg:col-span-1 lg:w-auto" : ""}
               ${
                 isVisible
                   ? "translate-y-0 opacity-100"
@@ -114,7 +162,7 @@ export default function ContactUs() {
             >
               <div className="flex justify-center mb-4">
                 <div className="relative w-14 h-14 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full border border-dashed border-purple-400 animate-spin animation-duration-[12s]" />
+                  <div className="absolute inset-0 rounded-full border border-dashed border-red-400 animate-spin animation-duration-[12s]" />
                   <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center">
                     {card.icon}
                   </div>
@@ -151,7 +199,8 @@ export default function ContactUs() {
                 placeholder="Your Name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-purple-600"
+                maxLength={80}
+                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-blue-400"
               />
 
               <input
@@ -160,7 +209,8 @@ export default function ContactUs() {
                 placeholder="Your Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-purple-600"
+                maxLength={120}
+                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-blue-400"
               />
 
               <textarea
@@ -169,12 +219,37 @@ export default function ContactUs() {
                 placeholder="Your Message"
                 value={formData.message}
                 onChange={handleChange}
-                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-purple-600"
+                maxLength={1000}
+                className="w-full px-4 py-3 text-sm sm:text-base border rounded-md focus:ring-2 focus:ring-blue-400"
               />
+
+              {/* CHANGE: honeypot field. Hidden from real users, bots fill it. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <label>
+                  Website
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </label>
+              </div>
 
               <button
                 disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-md transition w-full sm:w-auto"
+                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-md transition w-full sm:w-auto"
               >
                 {isSubmitting ? "Sending..." : "Send Message"}
               </button>

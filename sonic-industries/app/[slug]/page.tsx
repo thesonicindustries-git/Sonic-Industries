@@ -256,8 +256,10 @@ export default async function ProductPage({ params }: Props) {
     const allProductData = await getAllProductsUnderCategory(categoryData?._id);
 
     return (
-      <>
+      <main className="w-full min-w-0 overflow-x-hidden">
         <Navbar />
+        <div className="h-16 sm:h-20" aria-hidden="true" />
+        <span id="home" className="block scroll-mt-20" aria-hidden="true" />
 
         <Script id="ld-json-category" type="application/ld+json">
           {JSON.stringify({
@@ -307,7 +309,7 @@ export default async function ProductPage({ params }: Props) {
         <FAQs allProductData={allProductData} />
         <ContactUs />
         <Footer productData={null} allProductData={allProductData} />
-      </>
+      </main>
     );
   }
 
@@ -321,8 +323,10 @@ export default async function ProductPage({ params }: Props) {
     );
 
     return (
-      <>
+      <main className="w-full min-w-0 overflow-x-hidden">
         <Navbar />
+        <div className="h-16 sm:h-20" aria-hidden="true" />
+        <span id="home" className="block scroll-mt-20" aria-hidden="true" />
 
         <Script id="ld-json-product" type="application/ld+json">
           {JSON.stringify({
@@ -390,7 +394,7 @@ export default async function ProductPage({ params }: Props) {
         <FAQs allProductData={allProductData} />
         <ContactUs />
         <Footer productData={productData} allProductData={null} />
-      </>
+      </main>
     );
   }
 

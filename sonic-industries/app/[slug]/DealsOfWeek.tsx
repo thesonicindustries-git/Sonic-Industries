@@ -150,7 +150,7 @@ export default function DealsOfWeek() {
                         {currentDealData.productName}
                       </h2>
                       <div className="flex items-center mb-4 sm:mb-6">
-                        <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-600 mr-2 sm:mr-3">
+                        <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600 mr-2 sm:mr-3">
                           ₹{currentDealData.discountedPrice.toFixed(2)}
                         </span>
                         {currentDealData.mrp && (
@@ -169,7 +169,7 @@ export default function DealsOfWeek() {
                         {currentDealData.description}
                       </p>
                       <div className="flex items-center mb-4 sm:mb-6">
-                        <span className="text-xl sm:text-2xl md:text-3xl font-semibold text-indigo-600">
+                        <span className="text-xl sm:text-2xl md:text-3xl font-semibold text-orange-600">
                           Flat ₹{currentDealData.discountedPrice.toFixed(2)} off
                         </span>
                       </div>
@@ -177,34 +177,64 @@ export default function DealsOfWeek() {
                   )}
 
                   {/* Countdown */}
-                  <div className="mb-4 sm:mb-6">
-                    <div className="flex items-center mb-2">
-                      <p className="text-xs sm:text-sm text-gray-700 font-semibold mr-2">
-                        Use Coupon:
-                      </p>
-                      <p className="text-sm sm:text-base font-bold text-indigo-700 tracking-wider">
-                        {currentDealData.couponCode || "NO COUPON"}
-                      </p>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">
-                      Deal expires in:
-                    </p>
-                    <div className="flex justify-between max-w-xs sm:max-w-sm gap-2">
-                      {Object.entries(timeLeft).map(([key, value], index) => (
-                        <div
-                          key={index}
-                          className="text-center p-2 sm:p-3 bg-linear-to-b from-gray-100 to-gray-200 rounded-lg shadow-inner min-w-12"
-                        >
-                          <div className="text-lg sm:text-xl font-bold text-gray-800">
-                            {value}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600 capitalize">
-                            {key}
-                          </div>
+                    <div className="mb-4 sm:mb-6">
+                      <div className="flex items-center mb-2">
+                        <p className="text-xs sm:text-sm text-gray-700 font-semibold mr-2">
+                          Use Coupon:
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(currentDealData.couponCode || "");
+                            }}
+                            className="text-orange-700 hover:text-orange-900 transition-colors"
+                            title="Copy coupon code"
+                            aria-label="Copy coupon code"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <rect x="8" y="8" width="14" height="14" rx="2" />
+                              <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                            </svg>
+                          </button>
+
+                          <p className="text-sm sm:text-base font-bold text-orange-700 tracking-wider">
+                            {currentDealData.couponCode || "NO COUPON"}
+                          </p>
                         </div>
-                      ))}
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">
+                        Deal expires in:
+                      </p>
+
+                      <div className="flex justify-between max-w-xs sm:max-w-sm gap-2">
+                        {Object.entries(timeLeft).map(([key, value], index) => (
+                          <div
+                            key={index}
+                            className="text-center p-2 sm:p-3 bg-linear-to-b from-gray-100 to-gray-200 rounded-lg shadow-inner min-w-12"
+                          >
+                            <div className="text-lg sm:text-xl font-bold text-gray-800">
+                              {value}
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-600 capitalize">
+                              {key}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
                   <button
                     className="bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 sm:py-4 px-4 sm:px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer text-sm sm:text-base md:text-lg"
@@ -264,7 +294,7 @@ export default function DealsOfWeek() {
               onClick={() => setCurrentDeal(index)}
               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-300 ${
                 index === currentDeal
-                  ? "bg-indigo-600 scale-125"
+                  ? "bg-gray-600 scale-125"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               aria-label={`Go to deal ${index + 1}`}

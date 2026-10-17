@@ -137,6 +137,17 @@ html {
   overflow-x: hidden;
 }
 
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

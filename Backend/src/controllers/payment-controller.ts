@@ -15,7 +15,13 @@ import {
   getAdminRewardsEmailTemplate,
 } from "../config/Emails";
 
-const CheckoutSecret = process.env.JWT_CHECKOUT_SECRET!;
+const getCheckoutSecret = (): string => {
+  const secret = process.env.JWT_CHECKOUT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_CHECKOUT_SECRET is not configured");
+  }
+  return secret;
+};
 
 export const createRazorPayOrder = async (
   req: Request,
@@ -40,7 +46,7 @@ export const createRazorPayOrder = async (
       return;
     }
 
-    const decoded = jwt.verify(newOrderRequest.sessionToken, CheckoutSecret);
+    const decoded = jwt.verify(newOrderRequest.sessionToken, getCheckoutSecret());
     if (!decoded) {
       res.status(401).json({
         message: "Session expired or invalid",
@@ -48,15 +54,13 @@ export const createRazorPayOrder = async (
       return;
     }
 
-    const existingPaidOrder = await OrderModel.findOne({
+    const existingOrder = await OrderModel.findOne({
       sessionToken: newOrderRequest.sessionToken,
-      payment_status: { $in: ["paid", "partial"] }, // already paid
     });
 
-    if (existingPaidOrder) {
+    if (existingOrder) {
       res.status(400).json({
-        message:
-          "This checkout session has already been used for a successful payment.",
+        message: "This checkout session has already been used.",
       });
       return;
     }
@@ -103,12 +107,24 @@ export const createRazorPayOrder = async (
     const gst: number = Math.round(subtotal * 0.18);
     let shipping = subtotal + gst < 10000 ? 1000 : 5000;
 
-    const couponCode: string = newOrderRequest.couponCode || null;
-    const { discount } = await isDealApplicable(
+    const couponCode: string | null = newOrderRequest.couponCode || null;
+    // CHANGE: also get dealId so we can save it on the order
+    const { discount, dealId } = await isDealApplicable(
       couponCode,
       product._id.toString(),
       newOrderRequest.customer.email,
     );
+
+    // TEMPORARY DEBUG - remove after testing
+    console.log("COUPON DEBUG:", {
+      couponCode,
+      email: newOrderRequest.customer.email,
+      productId: product._id.toString(),
+      discount,
+      dealId,
+      subtotal,
+    });
+
     const priceAfterCoupon: number = subtotal + gst + shipping - discount;
 
     const prepaidDiscount = Math.round(priceAfterCoupon * 0.02);
@@ -135,6 +151,8 @@ export const createRazorPayOrder = async (
       total_price: subtotal + gst,
       shipping_fee: shipping,
       discount: discount,
+      // CHANGE: save which deal was used (needs a couponCode field in orders.model.ts)
+      couponCode: dealId,
       prepaidDiscount: prepaidDiscount,
       final_price: finalPayable,
       shipping_address: { ...newOrderRequest.customer.shippingAddress },
@@ -274,7 +292,7 @@ export const createCheckoutSession = async (
         productId,
         nonce,
       },
-      CheckoutSecret,
+      getCheckoutSecret(),
       { expiresIn: "15m" },
     );
 
@@ -298,7 +316,15 @@ export const verifyCheckoutSession = async (
   try {
     const { sessionToken } = req.body;
 
-    const decoded = jwt.verify(sessionToken, CheckoutSecret) as {
+    const existingOrder = await OrderModel.findOne({ sessionToken });
+    if (existingOrder) {
+      res.status(400).json({
+        message: "This checkout session has already been used.",
+      });
+      return;
+    }
+
+    const decoded = jwt.verify(sessionToken, getCheckoutSecret()) as {
       productId: string;
       nonce: string;
     };

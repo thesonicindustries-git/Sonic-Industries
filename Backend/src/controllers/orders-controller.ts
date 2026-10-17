@@ -40,9 +40,10 @@ export const createOrder = async (
   res: Response
 ): Promise<void> => {
   try {
-    const CheckoutSecret =
-      process.env.JWT_CHECKOUT_SECRET ||
-      "kbdhiffhibdsiujhaihhiBHBhvGUVguguGUYgutGFutf";
+    const CheckoutSecret = process.env.JWT_CHECKOUT_SECRET;
+    if (!CheckoutSecret) {
+      throw new Error("JWT_CHECKOUT_SECRET is not configured");
+    }
     const newOrderRequest = req.body;
 
     if (
@@ -64,15 +65,13 @@ export const createOrder = async (
       return;
     }
 
-    const existingPaidOrder = await OrderModel.findOne({
+    const existingOrder = await OrderModel.findOne({
       sessionToken: newOrderRequest.sessionToken,
-      payment_status: { $in: ["paid", "partial"] }, // already paid
     });
 
-    if (existingPaidOrder) {
+    if (existingOrder) {
       res.status(400).json({
-        message:
-          "This checkout session has already been used for a successful payment.",
+        message: "This checkout session has already been used.",
       });
       return;
     }
@@ -83,7 +82,7 @@ export const createOrder = async (
       payment_status: { $in: ["pending", "failed"] },
     });
 
-    if (existingPendingOrFailed >= 5) {
+    if (existingPendingOrFailed >= 2) {
       res.status(429).json({
         message: "Too many payment attempts for this session",
       });
@@ -116,11 +115,13 @@ export const createOrder = async (
     }
 
     const total_price: number = productInfo.price * newOrderRequest.quantity;
-    const gstPrice: number = total_price * 0.18;
-    const couponCode: string = newOrderRequest.couponCode || null;
+    // CHANGE: rounded GST, to match the frontend and the Razorpay flow
+    const gstPrice: number = Math.round(total_price * 0.18);
+    const couponCode: string | null = newOrderRequest.couponCode || null;
 
     let shipping = total_price + gstPrice < 10000 ? 1000 : 5000;
-    const { discount } = await isDealApplicable(
+    // CHANGE: also get dealId so we can save it on the order
+    const { discount, dealId } = await isDealApplicable(
       couponCode,
       productInfo._id.toString(),
       newOrderRequest.customer.email
@@ -147,6 +148,8 @@ export const createOrder = async (
       shipping_fee: shipping,
       postpaidCharges: postpaidCharge,
       discount: discount,
+      // CHANGE: save which deal was used (needs a couponCode field in orders.model.ts)
+      couponCode: dealId,
       final_price: finalPrice,
       shipping_address: { ...newOrderRequest.customer.shippingAddress },
       billing_address: { ...newOrderRequest.customer.billingAddress },

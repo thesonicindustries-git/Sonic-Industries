@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { authorizeRole } from "../middleware/authorizeRole";
 import {
+  leadsShortLimiter,
+  leadsDailyLimiter,
+  validateLead,
+} from "../middleware/leadsProtection";
+import {
   createLead,
   deleteLead,
   getAllLeads,
@@ -12,7 +17,7 @@ import { authenticateJWT } from "../middleware/authMiddleware";
 const router: Router = Router();
 
 router.get("/", authenticateJWT, authorizeRole("admin"), getAllLeads);
-router.post("/", createLead);
+router.post("/", leadsShortLimiter, leadsDailyLimiter, validateLead, createLead);
 router.patch(
   "/:id/read",
   authenticateJWT,

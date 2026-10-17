@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CategoryImages } from "@/types";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface ProductComparisonProps {
   allProductData: CategoryImages;
@@ -13,6 +14,7 @@ export default function ProductComparison({
   allProductData,
 }: ProductComparisonProps) {
   const products = allProductData.products || [];
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
 
   // -----------------------------
@@ -65,7 +67,7 @@ export default function ProductComparison({
                   <h2 className="font-bold text-sm leading-tight">
                     {product.name}
                   </h2>
-                  <p className="text-blue-600 font-extrabold text-sm">
+                  <p className="text-gray-600 font-extrabold text-sm">
                     ₹{product.price}
                   </p>
                 </div>
@@ -101,11 +103,7 @@ export default function ProductComparison({
               {/* CTA */}
               <button
                 className="mt-2 w-full bg-red-600 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-red-700 transition cursor-pointer"
-                onClick={() => {
-                  document.getElementById("features")?.scrollIntoView({
-                    behavior: "smooth",
-                  });
-                }}
+                onClick={() => router.push(`/${product.slug}`)}
               >
                 LEARN MORE
               </button>
@@ -147,7 +145,7 @@ export default function ProductComparison({
                     <h3 className="font-bold text-center text-sm lg:text-base">
                       {product.name}
                     </h3>
-                    <p className="text-blue-600 font-extrabold mt-1">
+                    <p className="text-gray-600 font-extrabold mt-1">
                       ₹{product.price}
                     </p>
                   </div>
@@ -189,11 +187,7 @@ export default function ProductComparison({
                 <td key={product._id} className="p-4">
                   <button
                     className="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition cursor-pointer"
-                    onClick={() => {
-                      document.getElementById("features")?.scrollIntoView({
-                        behavior: "smooth",
-                      });
-                    }}
+                    onClick={() => router.push(`/${product.slug}`)}
                   >
                     LEARN MORE
                   </button>

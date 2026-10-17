@@ -155,7 +155,7 @@ export default function Footer({ productData, allProductData }: FooterProps) {
             <motion.button
               key="scroll-to-top"
               onClick={scrollToTop}
-              className="w-12 h-12 bg-purple-700 rounded-full text-white flex items-center justify-center shadow-lg z-50 cursor-pointer"
+              className="w-12 h-12 bg-red-700 rounded-full text-white flex items-center justify-center shadow-lg z-50 cursor-pointer"
               initial="initial"
               animate="animate"
               exit="exit"
@@ -215,27 +215,17 @@ export default function Footer({ productData, allProductData }: FooterProps) {
               custom={0}
               className="space-y-4"
             >
-              <div className="mb-4">
-                <div className="flex items-center">
-                  <div className="w-12 h-auto relative mr-2">
-                    <Image
-                      src="/Sonic Logo.png"
-                      alt="Logo"
-                      width={48}
-                      height={48}
-                      className="w-12 h-16"
-                    />
-                  </div>
-                  <div className="text-2xl font-medium tracking-wider text-purple-600">
-                    <div className="text-transparent bg-clip-text bg-black">
-                      SONIC
-                    </div>
-                    <div className="text-transparent bg-clip-text bg-black">
-                      INDUSTRIES
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Logo */}
+                          <div className={`relative h-11 w-28 shrink-0 sm:h-12 sm:w-36 "hidden md:block" : ""}`}>
+                            <Image
+                              src="/sonic_logo_transparent.png"
+                              alt="Sonic Industries Logo"
+                              width={564}
+                              height={153}
+                              priority
+                              className="h-full w-full object-contain object-left"
+                            />
+                          </div>
               <p className="text-gray-600 text-sm leading-relaxed">
                 Leading manufacturer of high-quality packaging machinery and
                 solutions. Delivering excellence since inception.
@@ -244,15 +234,15 @@ export default function Footer({ productData, allProductData }: FooterProps) {
               {/* Contact Info */}
               <div className="space-y-2 pt-2">
                 <div className="flex items-start text-sm text-gray-600">
-                  <Mail className="w-4 h-4 mr-2 mt-1 text-purple-600" />
+                  <Mail className="w-4 h-4 mr-2 mt-1 text-red-600" />
                   <span>support@thesonicindustries.com</span>
                 </div>
                 <div className="flex items-start text-sm text-gray-600">
-                  <PhoneCall className="w-4 h-4 mr-2 mt-1 text-purple-600" />
+                  <PhoneCall className="w-4 h-4 mr-2 mt-1 text-red-600" />
                   <span>+91 801 073 5898</span>
                 </div>
                 <div className="flex items-start text-sm text-gray-600">
-                  <Clock className="w-4 h-4 mr-2 mt-1 text-purple-600" />
+                  <Clock className="w-4 h-4 mr-2 mt-1 text-red-600" />
                   <span>Mon - Fri: 10 AM - 6 PM IST</span>
                 </div>
               </div>
@@ -275,7 +265,7 @@ export default function Footer({ productData, allProductData }: FooterProps) {
                       href={link.href}
                       variants={linkHoverVariants}
                       whileHover="hover"
-                      className="text-gray-600 hover:text-purple-600 transition-colors text-sm inline-block hover:translate-x-1 transform duration-200"
+                      className="text-gray-600 hover:text-red-600 transition-colors text-sm inline-block hover:translate-x-1 transform duration-200"
                     >
                       {link.name}
                     </motion.a>
@@ -372,7 +362,7 @@ export default function Footer({ productData, allProductData }: FooterProps) {
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <p className="text-sm text-gray-600 text-center md:text-left">
                 Copyright &copy; {getCurrentYear()}{" "}
-                <span className="font-semibold text-purple-600">
+                <span className="font-semibold text-red-600">
                   Sonic Industries
                 </span>
                 . All rights reserved.
@@ -381,28 +371,28 @@ export default function Footer({ productData, allProductData }: FooterProps) {
               <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
                 <Link
                   href="/privacy-policy"
-                  className="hover:text-purple-600 transition-colors"
+                  className="hover:text-red-600 transition-colors"
                 >
                   Privacy
                 </Link>
                 <span>•</span>
                 <Link
                   href="/terms-and-conditions"
-                  className="hover:text-purple-600 transition-colors"
+                  className="hover:text-red-600 transition-colors"
                 >
                   Terms
                 </Link>
                 <span>•</span>
                 <Link
                   href="/refund-policy"
-                  className="hover:text-purple-600 transition-colors"
+                  className="hover:text-red-600 transition-colors"
                 >
                   Refunds
                 </Link>
                 <span>•</span>
                 <Link
                   href="/shipping-policy"
-                  className="hover:text-purple-600 transition-colors"
+                  className="hover:text-red-600 transition-colors"
                 >
                   Shipping
                 </Link>

@@ -177,11 +177,17 @@ export default function CheckoutClient() {
 
   const applyCoupon = async () => {
     if (coupon.trim()) {
+      // CHANGE: the backend checks "already used" by email, so email is needed first
+      if (!customer.email) {
+        setMessage("Please enter your email before applying a coupon.");
+        return;
+      }
+
       try {
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/deals/validate`,
           {
-            couponCode: coupon,
+            couponCode: coupon.trim(),
             productId: product._id,
             email: customer.email,
           },
@@ -190,16 +196,17 @@ export default function CheckoutClient() {
 
         if (!valid) {
           setMessage(message || "Invalid coupon code.");
-          setDiscount(discount);
+          setDiscount(0);
           return;
         }
+        // CHANGE: clear old error message on success
+        setMessage("");
         setDiscount(discount);
       } catch (error) {
         console.error("Coupon validation failed:", error);
         toast.error("Coupon validation failed");
-        setMessage(
-          message || "Something went wrong while validating the coupon.",
-        );
+        setDiscount(0);
+        setMessage("Something went wrong while validating the coupon.");
       }
     }
   };
@@ -231,6 +238,8 @@ export default function CheckoutClient() {
           },
           payment_method: "cod",
           quantity,
+          // CHANGE: send the coupon code to the backend
+          couponCode: discount > 0 ? coupon.trim() : undefined,
         },
       );
       const data = res.data;
@@ -271,7 +280,8 @@ export default function CheckoutClient() {
 
     if (!isPartialPaymentAllowed) {
       setRazorPayMode("full");
-      confirmRazorpayPayment();
+      // CHANGE: pass "full" directly, because state updates are not instant
+      confirmRazorpayPayment("full");
       return;
     }
 
@@ -279,8 +289,13 @@ export default function CheckoutClient() {
     setIsPaymentModalOpen(true);
   };
 
-  const confirmRazorpayPayment = async () => {
-    if (!razorPayMode) return;
+  // CHANGE: accepts an optional mode, falls back to the state value
+  const confirmRazorpayPayment = async (modeOverride?: unknown) => {
+    const mode =
+      modeOverride === "full" || modeOverride === "partial"
+        ? modeOverride
+        : razorPayMode;
+    if (!mode) return;
 
     setIsLoading(true);
     setIsPaymentModalOpen(false);
@@ -295,7 +310,9 @@ export default function CheckoutClient() {
           },
           payment_method: "razorpay",
           quantity,
-          razorPayMode,
+          razorPayMode: mode,
+          // CHANGE: send the coupon code to the backend (this fixes the main bug)
+          couponCode: discount > 0 ? coupon.trim() : undefined,
         },
       );
       const { RazorpayOrder, customerData } = res.data;
@@ -303,7 +320,7 @@ export default function CheckoutClient() {
         order: RazorpayOrder,
         customerData: customerData,
       };
-      initiatePayment(paymentPayLoad);
+      initiatePayment(paymentPayLoad, () => setIsLoading(true));
     } catch (error) {
       console.error("Razorpay checkout failed:", error);
       toast.error(
@@ -317,7 +334,8 @@ export default function CheckoutClient() {
   };
 
   const totalPrice = product.price * quantity;
-  const gstPrice = totalPrice * 0.18;
+  // CHANGE: rounded, to match the backend
+  const gstPrice = Math.round(totalPrice * 0.18);
   const shippingFee = totalPrice + gstPrice < 10000 ? 1000 : 5000;
   const finalPrice = totalPrice + gstPrice + shippingFee - discount;
   const prepaidDiscount = Math.round(finalPrice * 0.02);
@@ -330,34 +348,12 @@ export default function CheckoutClient() {
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            {[
-              { step: 1, label: "Shipping & Gift Options", active: true },
-              { step: 2, label: "Billing & Payment", active: false },
-              { step: 3, label: "Order Review", active: false },
-            ].map((item) => (
-              <div key={item.step} className="flex items-center gap-2">
-                <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold
-                ${
-                  item.active
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-300 text-gray-600"
-                }`}
-                >
-                  {item.step}
-                </div>
-                <span
-                  className={`text-xs sm:text-sm font-medium ${
-                    item.active ? "text-gray-900" : "text-gray-500"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </div>
-            ))}
+            <h2 className="text-xl font-semibold text-gray-900 mb-6  tracking-wide border-b pb-2">
+              CHECKOUT
+            </h2>
           </div>
 
-          <div className="mt-3 flex justify-center">
+          <div>
             <CheckoutTimer token={sessionToken} />
           </div>
         </div>
@@ -397,7 +393,12 @@ export default function CheckoutClient() {
                 isLoading={isLoading}
                 message={message}
                 onQuantityChange={handleQuantityChange}
-                onCouponChange={setCoupon}
+                // CHANGE: reset discount when the coupon text is edited
+                onCouponChange={(value: string) => {
+                  setCoupon(value);
+                  setDiscount(0);
+                  setMessage("");
+                }}
                 onApplyCoupon={applyCoupon}
                 onCodCheckout={handleCodCheckout}
                 onRazorpayCheckout={handleRazorpayCheckout}

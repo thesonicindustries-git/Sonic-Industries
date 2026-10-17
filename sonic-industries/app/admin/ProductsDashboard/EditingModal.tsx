@@ -10,6 +10,8 @@ import {
 import { useState } from "react";
 import * as LucideIcons from "lucide-react";
 import { toast } from "sonner";
+// CHANGE: Labels tab now uses LabelsForm (has the position preview)
+import LabelsForm from "./LabelsForm";
 
 const EditingModal = ({
   selectedProduct,
@@ -208,34 +210,7 @@ const EditingModal = ({
     }));
   };
 
-  // ---------- LABELS ----------
-  const handleAddLabel = () => {
-    setFormData((prev: typeof formData) => ({
-      ...prev,
-      labels: [...(prev.labels || []), { x: 0, y: 0, name: "", desc: "" }],
-    }));
-  };
-
-  const handleRemoveLabel = (index: number) => {
-    setFormData((prev: typeof formData) => ({
-      ...prev,
-      labels: prev.labels?.filter((_, i) => i !== index) || [],
-    }));
-  };
-
-  const updateLabel = (
-    index: number,
-    field: "x" | "y" | "name" | "desc",
-    value: string | number,
-  ) => {
-    setFormData((prev: typeof formData) => ({
-      ...prev,
-      labels:
-        prev.labels?.map((label, i) =>
-          i === index ? { ...label, [field]: value } : label,
-        ) || [],
-    }));
-  };
+  // CHANGE: label add / remove / update functions moved into LabelsForm.tsx
 
   // Images editing helpers (works with hybrid images)
   const addImage = () => {
@@ -846,105 +821,9 @@ const EditingModal = ({
           )}
 
           {/* ---------------- LABELS ---------------- */}
+          {/* CHANGE: whole labels UI replaced by LabelsForm (with position preview) */}
           {activeTab === "labels" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900">Labels</h3>
-                <button
-                  onClick={handleAddLabel}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Label
-                </button>
-              </div>
-
-              {formData.labels?.length ? (
-                formData.labels.map((label, index) => (
-                  <div
-                    key={index}
-                    className="border rounded-lg p-4 space-y-3 bg-gray-50"
-                  >
-                    <div className="flex justify-between">
-                      <span className="font-medium text-gray-700">
-                        Label {index + 1}
-                      </span>
-                      <button
-                        onClick={() => handleRemoveLabel(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Label Name *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Label Name"
-                        value={label.name}
-                        onChange={(e) =>
-                          updateLabel(index, "name", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        placeholder="Label Description"
-                        value={label.desc}
-                        onChange={(e) =>
-                          updateLabel(index, "desc", e.target.value)
-                        }
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          X Position
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="X"
-                          value={label.x}
-                          onChange={(e) =>
-                            updateLabel(index, "x", Number(e.target.value))
-                          }
-                          className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Y Position
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="Y"
-                          value={label.y}
-                          onChange={(e) =>
-                            updateLabel(index, "y", Number(e.target.value))
-                          }
-                          className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">
-                  No labels yet. Click &quot;Add Label&quot; to start.
-                </p>
-              )}
-            </div>
+            <LabelsForm formData={formData} setFormData={setFormData} />
           )}
 
           {/* Packaging Tab */}

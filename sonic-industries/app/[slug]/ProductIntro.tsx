@@ -130,7 +130,7 @@ export default function ProductIntro({
                     <div className="flex items-center mb-4">
                       <div className="p-2 flex items-center justify-center">
                         {SafeIcon && (
-                          <SafeIcon className="w-12 h-12 text-indigo-500" />
+                          <SafeIcon className="w-12 h-12 text-red-500" />
                         )}
                       </div>
                     </div>

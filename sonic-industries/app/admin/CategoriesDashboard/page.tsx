@@ -120,7 +120,7 @@ const CategoriesDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="mx-auto max-w-screen-xl space-y-5 sm:space-y-6">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
 
         {/* Header */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">

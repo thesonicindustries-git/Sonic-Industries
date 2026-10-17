@@ -151,21 +151,21 @@ export default function FAQs({ allProductData }: FAQsProps) {
     >
       {/* Background decoration */}
       <motion.div
-        className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-blue-500 blur-3xl pointer-events-none"
+        className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-red-500 blur-3xl pointer-events-none"
         initial="hidden"
         animate={isVisible ? "visible" : "hidden"}
         variants={backgroundVariants}
         custom={scrollProgress}
       />
       <motion.div
-        className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-purple-500 blur-3xl pointer-events-none"
+        className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-red-500 blur-3xl pointer-events-none"
         initial="hidden"
         animate={isVisible ? "visible" : "hidden"}
         variants={backgroundVariants}
         custom={scrollProgress * 0.8}
       />
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-none mx-auto">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-3">
           Asked Questions
         </h2>
@@ -175,10 +175,10 @@ export default function FAQs({ allProductData }: FAQsProps) {
           decisions.
         </p>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="w-full">
           {/* Accordion */}
           <motion.div
-            className="w-full md:w-1/2 space-y-4"
+            className="w-full space-y-4"
             initial="hidden"
             animate={isVisible ? "visible" : "hidden"}
             variants={faqContainerVariants}
@@ -206,7 +206,7 @@ export default function FAQs({ allProductData }: FAQsProps) {
                     animate={{ rotate: openItem === item.id ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
                   </motion.div>
                 </button>
 
@@ -226,22 +226,6 @@ export default function FAQs({ allProductData }: FAQsProps) {
                 </AnimatePresence>
               </motion.div>
             ))}
-          </motion.div>
-
-          {/* Image */}
-          <motion.div
-            className="hidden md:flex w-full md:w-1/2 min-h-full items-center justify-center relative"
-            initial="hidden"
-            animate={isVisible ? "visible" : "hidden"}
-            variants={imageContainerVariants}
-          >
-            <motion.img
-              src="https://res.cloudinary.com/drkzz6pfx/image/upload/v1768039731/Venture_by_Sapna_Group_wmum1z.png"
-              alt="Product Info"
-              className="max-w-md md:max-w-xs lg:max-w-md h-auto max-h-96 object-contain cursor-pointer"
-              variants={imageVariants}
-              whileHover="hover"
-            />
           </motion.div>
         </div>
       </div>
