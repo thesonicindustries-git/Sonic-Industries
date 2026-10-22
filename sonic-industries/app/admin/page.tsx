@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   BarChart3,
   MessageSquareQuote,
+  Newspaper,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,8 @@ import Image from "next/image";
 import OrdersDashboard from "./OrdersDashboard/page";
 import Dashboard from "./Dashboard/page";
 import TestimonialsDashboard from "./TestimonialsDashboard/page";
+// CHANGE: blog dashboard
+import BlogDashboard from "./BlogDashboard/page";
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -35,6 +38,7 @@ const AdminDashboard = () => {
     | "categories"
     | "deals"
     | "testimonials"
+    | "blog"
     | "leads"
     | "orders"
     | "dashboard"
@@ -66,6 +70,12 @@ const AdminDashboard = () => {
       label: "Testimonials",
       onClick: () => setActiveTab("testimonials"),
       icon: <MessageSquareQuote className="h-5 w-5 shrink-0 text-neutral-700" />,
+    },
+    // CHANGE: Blog sidebar item
+    {
+      label: "Blog",
+      onClick: () => setActiveTab("blog"),
+      icon: <Newspaper className="h-5 w-5 shrink-0 text-neutral-700" />,
     },
     {
       label: "Orders",
@@ -174,6 +184,7 @@ const AdminDashboard = () => {
         {activeTab === "categories" && <CategoriesDashboard />}
         {activeTab === "deals" && <DealsDashboard />}
         {activeTab === "testimonials" && <TestimonialsDashboard />}
+        {activeTab === "blog" && <BlogDashboard />}
         {activeTab === "leads" && <LeadsDashboard />}
         {activeTab === "orders" && <OrdersDashboard />}
         {activeTab === "dashboard" && <Dashboard />}
