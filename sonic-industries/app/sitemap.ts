@@ -1,6 +1,7 @@
 import { CategoryBackend, ProductBackend } from "@/types";
 import axios from "axios";
 import { MetadataRoute } from "next";
+import { getBlogSitemapEntries } from "@/lib/blogSitemap";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -53,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
   ];
-
+    const blogEntries = await getBlogSitemapEntries(frontend ?? "");
   // Combine all URLs
-  return [...categoryUrls, ...productUrls, ...staticPages];
+  return [...categoryUrls, ...productUrls, ...staticPages, ...blogEntries];
 }
