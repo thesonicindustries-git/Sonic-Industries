@@ -27,7 +27,6 @@ import {
 import { CategoryBackend, ProductBackend } from "@/types";
 // CHANGE: fuzzy (typo tolerant) search helper
 import { fuzzyScore } from "@/lib/fuzzySearch";
-import FakePopup from "@/lib/FakePopup";
 
 const featuredSuggestions = [
   { name: "Handheld Thermal Inkjet Printer", slug: "handheld-thermal-inkjet-printer", type: "Product" as const },
@@ -289,7 +288,6 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-white pt-16">
-      <FakePopup />
       {/* Floating contact buttons */}
       <div className="fixed right-3 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex flex-col gap-3 sm:right-4 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:gap-4">
         <motion.a
@@ -348,6 +346,10 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
               <a href="#about" className="text-black-700 transition hover:text-gray-600">
                 About
               </a>
+              {/* CHANGE: Blog link */}
+              <Link href="/blog" className="text-black-700 transition hover:text-gray-600">
+                Blog
+              </Link>
               <a href="#contact" className="text-black-700 transition hover:text-gray-600">
                 Contact
               </a>
@@ -409,6 +411,14 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
               >
                 About
               </a>
+              {/* CHANGE: Blog link */}
+              <Link
+                href="/blog"
+                className="px-2 py-3 text-black-700 hover:text-red-600"
+                onClick={() => setMenuOpen(false)}
+              >
+                Blog
+              </Link>
               <a
                 href="#contact"
                 className="px-2 py-3 text-black-700 hover:text-red-600"
@@ -569,7 +579,7 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
             {(showAllProducts ? orderedCategories : orderedCategories.slice(0, 15)).map((category) => (
               <div key={category._id} className="w-[calc(50%-0.375rem)] max-w-55 sm:w-55">
                 <Link href={`/${category.slug}`} prefetch aria-label={category.name} className="block">
-                  <div className="group flex aspect-square w-full items-center justify-center">
+                  <div className="group flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-100 shadow-sm">
                     {categoryImages[category._id] ? (
                       <Image
                         src={categoryImages[category._id]!}
@@ -577,7 +587,7 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
                         width={440}
                         height={440}
                         sizes="(max-width: 640px) 45vw, 220px"
-                        className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
                       <Package className="h-12 w-12 text-red-600 transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16" />
@@ -737,6 +747,12 @@ export default function HomeClient({ categories, products, categoryImages }: Pro
                   <a href="#about" className="text-gray-400 transition hover:text-red-400">
                     About Us
                   </a>
+                </li>
+                {/* CHANGE: Blog link */}
+                <li>
+                  <Link href="/blog" className="text-gray-400 transition hover:text-red-400">
+                    Blog
+                  </Link>
                 </li>
                 <li>
                   <a href="#contact" className="text-gray-400 transition hover:text-red-400">
