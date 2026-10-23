@@ -219,6 +219,7 @@ const ProductsDashboard = () => {
   };
 
   const SearchAllProductsProps = {
+    onProductsChange: setProducts,
     products,
     categories,
     startEdit,
@@ -227,7 +228,7 @@ const ProductsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="mx-auto max-w-screen-xl space-y-5 sm:space-y-6">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

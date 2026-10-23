@@ -34,6 +34,7 @@ export interface ProductBackend {
   tagline: string;
 
   categoryId: CategoryBackend;
+  sortOrder?: number;
 
   price: number;
   images: string[];
@@ -342,6 +343,7 @@ export type SearchAllProductProps = {
   products: ProductBackend[];
   startEdit: (product: ProductBackend) => void;
   handleDelete: (id: string) => void;
+  onProductsChange: (products: ProductBackend[]) => void;
 };
 
 export type ProductEditingModalProps = {

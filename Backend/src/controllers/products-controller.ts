@@ -385,7 +385,7 @@ export const getAllProducts = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const allProducts = await ProductModel.find().populate("categoryId");
+    const allProducts = await ProductModel.find().populate("categoryId").sort({ categoryId: 1, sortOrder: 1, createdAt: 1 });
 
     if (!allProducts || allProducts.length === 0) {
       res.status(404).json({
@@ -422,7 +422,7 @@ export const getProductByCategory = async (
       return;
     }
 
-    const products = await ProductModel.find({ categoryId: categoryId });
+    const products = await ProductModel.find({ categoryId: categoryId }).sort({ sortOrder: 1, createdAt: 1 });
 
     if (!products || products.length === 0) {
       res.status(404).json({
@@ -442,5 +442,61 @@ export const getProductByCategory = async (
         "Something went wrong while fetching the products. Please try again later.",
       error,
     });
+  }
+};
+
+export const reorderProduct = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { productId, categoryId, position } = req.body;
+    const targetPosition = Number(position);
+    if (!productId || !categoryId || !Number.isInteger(targetPosition) || targetPosition < 0) {
+      res.status(400).json({ message: "productId, categoryId and a valid position are required." });
+      return;
+    }
+
+    const [product, targetCategory] = await Promise.all([
+      ProductModel.findById(productId),
+      CategoryModel.findById(categoryId),
+    ]);
+    if (!product) { res.status(404).json({ message: "Product not found." }); return; }
+    if (!targetCategory) { res.status(400).json({ message: "Invalid categoryId." }); return; }
+
+    const sourceCategoryId = product.categoryId.toString();
+    const sourceCategory = await CategoryModel.findById(sourceCategoryId);
+    const targetCategoryId = categoryId.toString();
+    const categoryIds = sourceCategoryId === targetCategoryId
+      ? [sourceCategoryId]
+      : [sourceCategoryId, targetCategoryId];
+    const categoryProducts = await ProductModel.find({ categoryId: { $in: categoryIds } })
+      .sort({ sortOrder: 1, createdAt: 1, _id: 1 });
+    const sourceProducts = categoryProducts.filter((item) =>
+      item.categoryId.toString() === sourceCategoryId && item._id.toString() !== productId.toString(),
+    );
+    const targetProducts = sourceCategoryId === targetCategoryId
+      ? sourceProducts
+      : categoryProducts.filter((item) => item.categoryId.toString() === targetCategoryId);
+    const nextTargetProducts = [...targetProducts];
+    nextTargetProducts.splice(Math.min(targetPosition, nextTargetProducts.length), 0, product);
+
+    await ProductModel.bulkWrite([
+      ...sourceProducts.map((item, index) => ({ updateOne: { filter: { _id: item._id }, update: { $set: { sortOrder: index } } } })),
+      ...nextTargetProducts.map((item, index) => ({ updateOne: { filter: { _id: item._id }, update: { $set: { categoryId: targetCategory._id, sortOrder: index } } } })),
+    ]);
+    const updatedProduct = await ProductModel.findById(productId).populate("categoryId");
+    const affectedProducts = await ProductModel.find({ categoryId: { $in: categoryIds } }).populate("categoryId").sort({ sortOrder: 1, createdAt: 1, _id: 1 });
+    try {
+      const paths = [`/${targetCategory.slug}`, `/${updatedProduct?.slug}`];
+      if (sourceCategory && sourceCategory.slug !== targetCategory.slug) paths.push(`/${sourceCategory.slug}`);
+      await axios.get(`${process.env.FRONTEND_URL}/api/revalidate`, { params: { paths: JSON.stringify(paths), secret: process.env.REVALIDATE_SECRET } });
+    } catch (revalidationError) {
+      console.error("Failed to revalidate product pages:", revalidationError);
+    }
+    res.status(200).json({ message: "Product moved successfully.", updatedProduct, products: affectedProducts });
+  } catch (error) {
+    console.error("Error reordering product:", error);
+    res.status(500).json({ message: "Something went wrong while moving the product.", error });
   }
 };

@@ -6,6 +6,7 @@ import {
   getProductByCategory,
   getProductBySlug,
   updateProduct,
+  reorderProduct,
 } from "../controllers/products-controller";
 import { authenticateJWT } from "../middleware/authMiddleware";
 import { authorizeRole } from "../middleware/authorizeRole";
@@ -17,6 +18,7 @@ router.get("/:slug", getProductBySlug);
 router.get("/", getAllProducts);
 router.post("/", authenticateJWT, authorizeRole("admin"), upload.array("images"), createProduct);
 router.post("/getProducts", getProductByCategory);
+router.post("/reorder", authenticateJWT, authorizeRole("admin"), reorderProduct);
 router.put("/", authenticateJWT, authorizeRole("admin"), upload.array("images"), updateProduct);
 router.delete("/:slug", authenticateJWT, authorizeRole("admin"), deleteProduct);
 

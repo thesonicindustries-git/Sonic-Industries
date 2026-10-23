@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -10,6 +11,8 @@ import {
   IndianRupee,
   ChevronUp,
   ChevronDown,
+  MoreVertical,
+  Move,
 } from "lucide-react";
 
 import { ProductBackend, SearchAllProductProps } from "@/types";
@@ -19,10 +22,16 @@ const SearchAllProducts = ({
   categories,
   startEdit,
   handleDelete,
+  onProductsChange,
 }: SearchAllProductProps) => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [moveProduct, setMoveProduct] = useState<ProductBackend | null>(null);
+  const [moveCategoryId, setMoveCategoryId] = useState("");
+  const [movePosition, setMovePosition] = useState("0");
+  const [savingMove, setSavingMove] = useState(false);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) => {
@@ -57,14 +66,40 @@ const SearchAllProducts = ({
     return stars;
   };
 
+  const sortedProducts = (items: ProductBackend[]) => [...items].sort((a, b) => {
+    if (typeof a.sortOrder === "number" && typeof b.sortOrder === "number" && a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+    return (a.createdAt || "").localeCompare(b.createdAt || "");
+  });
+
+  const openMove = (product: ProductBackend) => {
+    setMoveProduct(product);
+    setMoveCategoryId(product.categoryId?._id || categories[0]?._id || "");
+    setMovePosition(String(sortedProducts(products.filter((p) => p.categoryId?._id === product.categoryId?._id)).findIndex((p) => p._id === product._id)));
+    setActiveMenu(null);
+  };
+
+  const saveMove = async () => {
+    if (!moveProduct || !moveCategoryId) return;
+    setSavingMove(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/reorder`, { productId: moveProduct._id, categoryId: moveCategoryId, position: Number(movePosition) }, { headers: { Authorization: `Bearer ${token}` } });
+      const affectedProducts = response.data.products || [response.data.updatedProduct];
+      const affectedIds = new Set(affectedProducts.map((product: ProductBackend) => product._id));
+      onProductsChange([...products.filter((product) => !affectedIds.has(product._id)), ...affectedProducts]);
+      setMoveProduct(null);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to move product");
+    } finally { setSavingMove(false); }
+  };
   /* ---------- GROUP PRODUCTS ---------- */
 
   const groupedProducts = categories
     .map((category) => ({
       category,
-      products: products.filter(
+      products: sortedProducts(products.filter(
         (p) => p.categoryId && p.categoryId._id === category._id
-      ),
+      )),
     }))
     .filter((group) => group.products.length > 0);
 
@@ -109,18 +144,29 @@ const SearchAllProducts = ({
                 {products.map((product) => (
                   <div
                     key={product._id}
-                    className="bg-white border rounded-md p-3 hover:shadow transition"
+                    className="relative bg-white border rounded-md p-3 hover:shadow transition"
                   >
+                    <div className="absolute right-2 top-2 z-10">
+                      <button onClick={() => setActiveMenu(activeMenu === product._id ? null : product._id)} aria-label={`More actions for ${product.name}`} className="rounded-full bg-white p-1.5 text-gray-600 shadow hover:bg-gray-100"><MoreVertical className="h-4 w-4" /></button>
+                      {activeMenu === product._id && <div className="absolute right-0 mt-1 w-36 rounded-md border bg-white py-1 shadow-lg"><button onClick={() => openMove(product)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"><Move className="h-3.5 w-3.5" />Move to...</button></div>}
+                    </div>
+
                     {/* IMAGE */}
-                    {product.images?.[0] && (
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        width={400}
-                        height={200}
-                        className="w-full h-24 object-cover rounded bg-gray-100 mb-2"
-                      />
-                    )}
+                    <div className="group relative mb-3 flex h-36 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/60 p-3 shadow-inner sm:h-40">
+                      {product.images?.[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          width={600}
+                          height={400}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <span className="text-xs font-medium text-slate-400">No image available</span>
+                      )}
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-slate-900/5 to-transparent" />
+                    </div>
 
                     {/* NAME */}
                     <h3 className="text-sm font-medium text-gray-900 leading-tight">
@@ -199,6 +245,17 @@ const SearchAllProducts = ({
         </div>
       ))}
 
+      {moveProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setMoveProduct(null)}>
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between"><h3 className="text-base font-semibold text-gray-900">Move product</h3><button onClick={() => setMoveProduct(null)} className="text-gray-500">×</button></div>
+            <p className="mb-4 truncate text-sm text-gray-600">{moveProduct.name}</p>
+            <label className="mb-3 block text-xs font-medium text-gray-700">Category<select value={moveCategoryId} onChange={(event) => { setMoveCategoryId(event.target.value); setMovePosition("0"); }} className="mt-1 w-full rounded-md border px-3 py-2 text-sm">{categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}</select></label>
+            <label className="mb-5 block text-xs font-medium text-gray-700">Position<select value={movePosition} onChange={(event) => setMovePosition(event.target.value)} className="mt-1 w-full rounded-md border px-3 py-2 text-sm">{Array.from({ length: products.filter((product) => product.categoryId?._id === moveCategoryId && product._id !== moveProduct._id).length + 1 }, (_, index) => <option key={index} value={index}>{index + 1}</option>)}</select></label>
+            <div className="flex justify-end gap-2"><button onClick={() => setMoveProduct(null)} className="rounded-md border px-4 py-2 text-sm">Cancel</button><button onClick={saveMove} disabled={savingMove} className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50">{savingMove ? "Moving..." : "Move product"}</button></div>
+          </div>
+        </div>
+      )}
       {/* UNCATEGORIZED */}
       {uncategorizedProducts.length > 0 && (
         <div className="border rounded-md bg-white p-3">

@@ -14,6 +14,7 @@ const ProductSchema = new Schema(
     tagline: { type: String, required: true },
 
     categoryId: { type: Types.ObjectId, ref: "Category", required: true },
+    sortOrder: { type: Number },
 
     price: { type: Number, required: true },
     images: [{ type: String }], // image URLs
