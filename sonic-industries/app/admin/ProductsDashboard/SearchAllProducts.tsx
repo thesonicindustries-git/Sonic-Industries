@@ -12,6 +12,7 @@ import {
   ChevronUp,
   ChevronDown,
   MoreVertical,
+  Heart,
   Move,
 } from "lucide-react";
 
@@ -78,6 +79,21 @@ const SearchAllProducts = ({
     setActiveMenu(null);
   };
 
+  const togglePriority = async (product: ProductBackend) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products/priority`,
+        { productId: product._id, isPriority: !product.isPriority },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const affectedProducts = response.data.products || [response.data.updatedProduct];
+      const affectedIds = new Set(affectedProducts.map((item: ProductBackend) => item._id));
+      onProductsChange([...products.filter((item) => !affectedIds.has(item._id)), ...affectedProducts]);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to update product priority");
+    }
+  };
   const saveMove = async () => {
     if (!moveProduct || !moveCategoryId) return;
     setSavingMove(true);
@@ -146,6 +162,9 @@ const SearchAllProducts = ({
                     key={product._id}
                     className="relative bg-white border rounded-md p-3 hover:shadow transition"
                   >
+                    <div className="absolute left-2 top-2 z-10">
+                      <button onClick={() => togglePriority(product)} aria-label={product.isPriority ? `Remove priority from ${product.name}` : `Prioritize ${product.name}`} title={product.isPriority ? "Remove priority" : "Prioritize product"} className={`rounded-full bg-white p-1.5 shadow transition hover:bg-rose-50 ${product.isPriority ? "text-rose-500" : "text-slate-400"}`}><Heart className="h-4 w-4" fill={product.isPriority ? "currentColor" : "none"} /></button>
+                    </div>
                     <div className="absolute right-2 top-2 z-10">
                       <button onClick={() => setActiveMenu(activeMenu === product._id ? null : product._id)} aria-label={`More actions for ${product.name}`} className="rounded-full bg-white p-1.5 text-gray-600 shadow hover:bg-gray-100"><MoreVertical className="h-4 w-4" /></button>
                       {activeMenu === product._id && <div className="absolute right-0 mt-1 w-36 rounded-md border bg-white py-1 shadow-lg"><button onClick={() => openMove(product)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"><Move className="h-3.5 w-3.5" />Move to...</button></div>}

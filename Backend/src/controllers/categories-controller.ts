@@ -262,7 +262,11 @@ export const getCategoryImages = async (
     }
 
     const allProducts: Product[] = await ProductModel.find({ categoryId: id }).sort({ sortOrder: 1, createdAt: 1, _id: 1 });
-    const allImages = allProducts.flatMap((p) => p.images);
+    const priorityProduct = allProducts.find((product) => product.isPriority);
+    const imageProducts = priorityProduct
+      ? [priorityProduct, ...allProducts.filter((product) => product._id.toString() !== priorityProduct._id.toString())]
+      : allProducts;
+    const allImages = imageProducts.flatMap((p) => p.images);
 
     const uniqueImages = Array.from(new Set<string>(allImages));
     res.status(201).json({

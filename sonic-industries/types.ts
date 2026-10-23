@@ -35,6 +35,7 @@ export interface ProductBackend {
 
   categoryId: CategoryBackend;
   sortOrder?: number;
+  isPriority?: boolean;
 
   price: number;
   images: string[];

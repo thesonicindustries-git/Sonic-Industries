@@ -60,12 +60,12 @@ export default async function Home() {
 
   // Use the first matching product image for each category
   categories.forEach((category) => {
-    const firstProduct = products.find(
-      (product) =>
-        product.categoryId?._id === category._id &&
-        Array.isArray(product.images) &&
-        product.images.length > 0,
+    const categoryProducts = products.filter((product) =>
+      product.categoryId?._id === category._id &&
+      Array.isArray(product.images) &&
+      product.images.length > 0,
     );
+    const firstProduct = categoryProducts.find((product) => product.isPriority) ?? categoryProducts[0];
 
     categoryImages[category._id] =
       firstProduct?.images?.[0] ?? null;

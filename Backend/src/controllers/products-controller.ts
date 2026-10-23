@@ -500,3 +500,56 @@ export const reorderProduct = async (
     res.status(500).json({ message: "Something went wrong while moving the product.", error });
   }
 };
+export const toggleProductPriority = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { productId, isPriority } = req.body;
+    if (!productId || typeof isPriority !== "boolean") {
+      res.status(400).json({ message: "productId and isPriority are required." });
+      return;
+    }
+
+    const selectedProduct = await ProductModel.findById(productId);
+    if (!selectedProduct) {
+      res.status(404).json({ message: "Product not found." });
+      return;
+    }
+
+    // Priority is exclusive within a category: selecting one clears the old one.
+    if (isPriority) {
+      await ProductModel.updateMany(
+        { categoryId: selectedProduct.categoryId, _id: { $ne: productId } },
+        { $set: { isPriority: false } },
+      );
+    }
+
+    const product = await ProductModel.findByIdAndUpdate(
+      productId,
+      { isPriority },
+      { new: true },
+    ).populate("categoryId");
+    if (!product) {
+      res.status(404).json({ message: "Product not found." });
+      return;
+    }
+
+    try {
+      const category = product.categoryId as unknown as { slug?: string };
+      const paths = ["/", `/${product.slug}`];
+      if (category?.slug) paths.push(`/${category.slug}`);
+      await axios.get(`${process.env.FRONTEND_URL}/api/revalidate`, {
+        params: { paths: JSON.stringify(paths), secret: process.env.REVALIDATE_SECRET },
+      });
+    } catch (revalidationError) {
+      console.error("Failed to revalidate priority pages:", revalidationError);
+    }
+
+    const affectedProducts = await ProductModel.find({ categoryId: selectedProduct.categoryId }).populate("categoryId").sort({ sortOrder: 1, createdAt: 1, _id: 1 });
+    res.status(200).json({ message: "Product priority updated.", updatedProduct: product, products: affectedProducts });
+  } catch (error) {
+    console.error("Error updating product priority:", error);
+    res.status(500).json({ message: "Something went wrong while updating product priority.", error });
+  }
+};

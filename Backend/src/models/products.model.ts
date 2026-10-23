@@ -15,6 +15,7 @@ const ProductSchema = new Schema(
 
     categoryId: { type: Types.ObjectId, ref: "Category", required: true },
     sortOrder: { type: Number },
+    isPriority: { type: Boolean, default: false },
 
     price: { type: Number, required: true },
     images: [{ type: String }], // image URLs
